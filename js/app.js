@@ -18,6 +18,7 @@ const CONFIG = {
 
       shortInputCooldownMs: 80,
       longInputCooldownMs: 450,
+      pressDashThresholdMs: 260,
       wordPool: "beginner"
     },
     intermediate: {
@@ -29,6 +30,7 @@ const CONFIG = {
 
       shortInputCooldownMs: 50,
       longInputCooldownMs: 320,
+      pressDashThresholdMs: 230,
       wordPool: "intermediate"
     },
     expert: {
@@ -40,6 +42,7 @@ const CONFIG = {
 
       shortInputCooldownMs: 30,
       longInputCooldownMs: 340,
+      pressDashThresholdMs: 210,
       wordPool: "expert"
     }
   },
@@ -303,6 +306,10 @@ let lastSignalSymbol = null;
 let lastSignalAt = 0;
 let nextSignalAllowedAt = 0;
 
+let pressStartedAt = 0;
+let activePointerId = null;
+let spacePressActive = false;
+
 let targetWord = "";
 let roundStarted = false;
 let roundFinished = false;
@@ -403,6 +410,29 @@ function playClickSound() {
   playSound("click");
 }
 
+function startPressTone() {
+  if (!CONFIG.SOUND_ENABLED) return;
+
+  const sound = sounds.long;
+  if (!sound) return;
+
+  sound.loop = false;
+  sound.pause();
+  sound.currentTime = 0;
+
+  sound.play().catch(() => {
+    // Audio can be blocked until the first user gesture.
+  });
+}
+
+function stopPressTone() {
+  const sound = sounds.long;
+  if (!sound) return;
+
+  sound.pause();
+  sound.currentTime = 0;
+}
+
 function toggleBackgroundMusic() {
   backgroundMusicEnabled = !backgroundMusicEnabled;
 
@@ -494,6 +524,11 @@ function getInputCooldownMs(symbol) {
   // Prevent cooldown from exceeding the pause that starts the next letter.
   // This keeps fast expert input possible while preserving the long-signal delay feel.
   return Math.min(configuredCooldown, Math.max(0, letterGap - 40));
+}
+
+function getPressDashThresholdMs() {
+  const difficultyConfig = getDifficultyConfig();
+  return difficultyConfig.pressDashThresholdMs ?? 230;
 }
 
 function getGameOverPauseLimitMs() {
@@ -1699,7 +1734,10 @@ function handleWrongSignal() {
   }
 }
 
-function triggerSignal(symbol) {
+function triggerSignal(symbol, options = {}) {
+  const playSignalSound = options.playSignalSound ?? true;
+  const flashButton = options.flashButton ?? true;
+
   if (!mode) return;
   if (roundFinished) return;
   if (isOverlayOpen()) return;
@@ -1735,9 +1773,69 @@ function triggerSignal(symbol) {
 
   nextSignalAllowedAt = now + getInputCooldownMs(symbol);
 
-  flashInputButton();
+  if (flashButton) {
+    flashInputButton();
+  }
+
   flashStageFx(symbol);
-  playSound(symbol === "-" ? "long" : "short");
+
+  if (playSignalSound) {
+    playSound(symbol === "-" ? "long" : "short");
+  }
+}
+
+function startPressInput(pointerId = null) {
+  if (!mode) return;
+  if (roundFinished) return;
+  if (isOverlayOpen()) return;
+  if (pressStartedAt) return;
+
+  const now = performance.now();
+
+  if (now < nextSignalAllowedAt) {
+    return;
+  }
+
+  pressStartedAt = now;
+  activePointerId = pointerId;
+
+  morseBtn.classList.add("pressed");
+  startPressTone();
+}
+
+function finishPressInput(pointerId = null) {
+  if (!pressStartedAt) return;
+
+  if (activePointerId !== null && pointerId !== null && activePointerId !== pointerId) {
+    return;
+  }
+
+  const now = performance.now();
+  const duration = now - pressStartedAt;
+  const symbol = duration >= getPressDashThresholdMs() ? "-" : ".";
+
+  pressStartedAt = 0;
+  activePointerId = null;
+  spacePressActive = false;
+
+  stopPressTone();
+  morseBtn.classList.remove("pressed");
+
+  triggerSignal(symbol, {
+    playSignalSound: false,
+    flashButton: false
+  });
+}
+
+function cancelPressInput() {
+  if (!pressStartedAt) return;
+
+  pressStartedAt = 0;
+  activePointerId = null;
+  spacePressActive = false;
+
+  stopPressTone();
+  morseBtn.classList.remove("pressed");
 }
 
 function resetAll() {
@@ -1754,6 +1852,11 @@ function resetAll() {
   lastSignalAt = 0;
   nextSignalAllowedAt = 0;
   gameIdleStartedAt = 0;
+
+  pressStartedAt = 0;
+  activePointerId = null;
+  spacePressActive = false;
+  stopPressTone();
 
   roundStarted = false;
   roundFinished = false;
@@ -1863,14 +1966,24 @@ morseBtn.addEventListener("contextmenu", (e) => {
 morseBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
 
-  if (e.button === 2) {
-    triggerSignal("-");
-    return;
-  }
+  if (e.button !== 0) return;
 
-  if (e.button === 0) {
-    triggerSignal(".");
-  }
+  morseBtn.setPointerCapture?.(e.pointerId);
+  startPressInput(e.pointerId);
+});
+
+morseBtn.addEventListener("pointerup", (e) => {
+  e.preventDefault();
+  finishPressInput(e.pointerId);
+});
+
+morseBtn.addEventListener("pointercancel", (e) => {
+  e.preventDefault();
+  cancelPressInput();
+});
+
+morseBtn.addEventListener("lostpointercapture", () => {
+  cancelPressInput();
 });
 
 resetBtn.addEventListener("click", () => {
@@ -2021,32 +2134,11 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
 
-    if (!e.repeat) {
-      triggerSignal(".");
+    if (!e.repeat && !spacePressActive) {
+      spacePressActive = true;
+      startPressInput();
     }
 
-    return;
-  }
-
-  if (e.key === "Enter") {
-    e.preventDefault();
-
-    if (!e.repeat) {
-      triggerSignal("-");
-    }
-
-    return;
-  }
-
-  if (e.key === "." || e.key === "," || e.code === "ArrowLeft") {
-    e.preventDefault();
-    triggerSignal(".");
-    return;
-  }
-
-  if (e.key === "-" || e.key === "_" || e.code === "ArrowRight") {
-    e.preventDefault();
-    triggerSignal("-");
     return;
   }
 
@@ -2113,6 +2205,13 @@ window.addEventListener("keydown", (e) => {
 
     openMenu();
   }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.code !== "Space") return;
+
+  e.preventDefault();
+  finishPressInput();
 });
 
 window.addEventListener("contextmenu", (e) => {
