@@ -72,7 +72,16 @@ const CONFIG = {
       "GO",
       "TON",
       "TEAM",
-      "CODE"
+      "CODE",
+      "TONE",
+      "NOTE",
+      "ATOM",
+      "NODE",
+      "DATA",
+      "EAST",
+      "WEST",
+      "STAR",
+      "MOON"
     ],
     intermediate: [
       "MORSE",
@@ -82,7 +91,16 @@ const CONFIG = {
       "ALERT",
       "BEACON",
       "VECTOR",
-      "STATIC"
+      "STATIC",
+      "TUNING",
+      "ANTENNA",
+      "RELAY",
+      "PACKET",
+      "STATION",
+      "CONTACT",
+      "CHANNEL",
+      "RECEIVE",
+      "DECODE"
     ],
     expert: [
       "MORSECODE",
@@ -93,7 +111,15 @@ const CONFIG = {
       "FREQUENCY",
       "BROADCAST",
       "NAVIGATION",
-      "COMMUNICATION"
+      "COMMUNICATION",
+      "TRANSCEIVER",
+      "OSCILLATOR",
+      "MODULATION",
+      "AMPLITUDE",
+      "DIRECTIONAL",
+      "WAVELENGTH",
+      "SHORTWAVE",
+      "RADIOBEACON"
     ]
   },
 
@@ -259,8 +285,17 @@ let roundStartAt = 0;
 let roundResult = null; // null | "success" | "fail"
 let gameIdleStartedAt = 0;
 
+let roundEndSelection = "yes"; // "yes" | "no"
+
 let visualHintEnabled = true;
 let backgroundMusicEnabled = CONFIG.BACKGROUND_NOISE_ENABLED;
+
+const wordPoolIndexes = {
+  beginner: 0,
+  intermediate: 0,
+  expert: 0
+};
+
 let lastFrameTime = performance.now();
 
 /* =========================
@@ -600,8 +635,39 @@ function openRoundEndBox(success) {
   roundEndTitle.textContent = success ? "Success" : "Game Over";
   roundEndText.textContent = "Again?";
 
+  roundEndSelection = "yes";
+  updateRoundEndSelection();
+
   roundEndBox.classList.remove("is-hidden");
   updateOverlayBlur();
+}
+
+function updateRoundEndSelection() {
+  if (againYesBtn) {
+    againYesBtn.classList.toggle("is-active", roundEndSelection === "yes");
+  }
+
+  if (againNoBtn) {
+    againNoBtn.classList.toggle("is-active", roundEndSelection === "no");
+  }
+}
+
+function selectRoundEndOption(nextSelection) {
+  if (nextSelection !== "yes" && nextSelection !== "no") return;
+
+  roundEndSelection = nextSelection;
+  updateRoundEndSelection();
+}
+
+function confirmRoundEndSelection() {
+  if (roundEndSelection === "yes") {
+    closeRoundEndBox();
+    resetAll();
+    return;
+  }
+
+  closeRoundEndBox();
+  openMenu();
 }
 
 function closeRoundEndBox() {
@@ -616,7 +682,7 @@ function closeRoundEndBox() {
    UI HELPERS
    ========================= */
 
-function chooseRandomTargetWord() {
+function chooseNextTargetWord() {
   const difficultyConfig = getDifficultyConfig();
   const poolName = difficultyConfig.wordPool || difficulty;
   const words =
@@ -624,7 +690,14 @@ function chooseRandomTargetWord() {
     CONFIG.TARGET_WORDS[difficulty] ||
     CONFIG.TARGET_WORDS.intermediate;
 
-  targetWord = words[Math.floor(Math.random() * words.length)];
+  if (!wordPoolIndexes[poolName]) {
+    wordPoolIndexes[poolName] = 0;
+  }
+
+  const index = wordPoolIndexes[poolName] % words.length;
+  targetWord = words[index];
+
+  wordPoolIndexes[poolName] = (index + 1) % words.length;
 }
 
 function setRoundTimerState(state) {
@@ -635,8 +708,8 @@ function setRoundTimerState(state) {
 function updateResetButtonState() {
   if (!resetBtn) return;
 
-  const disabled = mode === "game" && !roundFinished;
-  resetBtn.disabled = disabled;
+  resetBtn.disabled = false;
+  resetBtn.textContent = mode === "game" ? "New Word" : "Reset";
 }
 
 function updateHeader() {
@@ -1387,6 +1460,12 @@ function addSignal(symbol) {
   currentSequence = next;
   updateHighlight();
   pulseCurrentPath();
+
+  if (mode === "game" && next === getNextTargetSequence()) {
+    finishLetter();
+    return true;
+  }
+
   scheduleLetterFinish();
 
   return true;
@@ -1443,6 +1522,10 @@ function triggerSignal(symbol) {
     finishLetter();
   }
 
+  lastSignalSymbol = symbol;
+  lastSignalAt = now;
+  lastInputEndedAt = now;
+
   const accepted = addSignal(symbol);
 
   if (!accepted) {
@@ -1450,10 +1533,9 @@ function triggerSignal(symbol) {
     return;
   }
 
-  gameIdleStartedAt = 0;
-  lastSignalSymbol = symbol;
-  lastSignalAt = now;
-  lastInputEndedAt = now;
+  if (mode !== "game" || currentSequence) {
+    gameIdleStartedAt = 0;
+  }
 
   nextSignalAllowedAt = now + getInputCooldownMs(symbol);
 
@@ -1487,7 +1569,7 @@ function resetAll() {
   setRoundTimerState("is-idle");
 
   if (mode === "game") {
-    chooseRandomTargetWord();
+    chooseNextTargetWord();
   } else {
     targetWord = "";
   }
@@ -1632,16 +1714,16 @@ if (closeHelpBtn) {
 if (againYesBtn) {
   againYesBtn.addEventListener("click", () => {
     playClickSound();
-    closeRoundEndBox();
-    resetAll();
+    selectRoundEndOption("yes");
+    confirmRoundEndSelection();
   });
 }
 
 if (againNoBtn) {
   againNoBtn.addEventListener("click", () => {
     playClickSound();
-    closeRoundEndBox();
-    openMenu();
+    selectRoundEndOption("no");
+    confirmRoundEndSelection();
   });
 }
 
@@ -1679,17 +1761,40 @@ window.addEventListener("keydown", (e) => {
   if (isVisible(roundEndBox)) {
     const key = e.key.toLowerCase();
 
+    if (e.code === "ArrowLeft") {
+      e.preventDefault();
+      playClickSound();
+      selectRoundEndOption("yes");
+      return;
+    }
+
+    if (e.code === "ArrowRight") {
+      e.preventDefault();
+      playClickSound();
+      selectRoundEndOption("no");
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      playClickSound();
+      confirmRoundEndSelection();
+      return;
+    }
+
     if (key === "y") {
       e.preventDefault();
-      closeRoundEndBox();
-      resetAll();
+      playClickSound();
+      selectRoundEndOption("yes");
+      confirmRoundEndSelection();
       return;
     }
 
     if (key === "n") {
       e.preventDefault();
-      closeRoundEndBox();
-      openMenu();
+      playClickSound();
+      selectRoundEndOption("no");
+      confirmRoundEndSelection();
       return;
     }
   }
