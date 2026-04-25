@@ -154,6 +154,16 @@ const CONFIG = {
 
   NODE_BORDER_THICKNESS: 0.032,
   NODE_VISUAL_PADDING: 0.12,
+  NODE_DEPTH_OFFSET_X: 0.075,
+  NODE_DEPTH_OFFSET_Y: -0.075,
+  NODE_SHADOW_OPACITY: 0.34,
+  NODE_HIGHLIGHT_OPACITY: 0.13,
+  NODE_HIGHLIGHT_OFFSET_X: -0.035,
+  NODE_HIGHLIGHT_OFFSET_Y: 0.045,
+  LABEL_STROKE_WIDTH: 9,
+  LABEL_SHADOW_BLUR: 18,
+  LABEL_SHADOW_OFFSET_X: 7,
+  LABEL_SHADOW_OFFSET_Y: 8,
   DASH_CORNER_RADIUS: 0.16,
   EDGE_THICKNESS: 0.032,
 
@@ -184,7 +194,16 @@ const CONFIG = {
   NODE_CURRENT_GLOW_OPACITY: 0.28,
   NODE_PULSE_GLOW_OPACITY: 0.62,
   EDGE_BASE_GLOW_OPACITY: 0.32,
-  EDGE_PULSE_GLOW_OPACITY: 0.82
+  EDGE_PULSE_GLOW_OPACITY: 0.82,
+
+  // Screen / post FX
+  FX_ENABLED: true,
+  FX_SIGNAL_FLASH_MS: 90,
+  FX_CAMERA_DRIFT_ENABLED: true,
+  FX_CAMERA_DRIFT_X: 0.018,
+  FX_CAMERA_DRIFT_Y: 0.012,
+  FX_CAMERA_DRIFT_SPEED: 0.0014,
+  FX_TONE_MAPPING_EXPOSURE: 1.08
 };
 
 /* =========================
@@ -292,6 +311,7 @@ let backgroundMusicEnabled = CONFIG.BACKGROUND_NOISE_ENABLED;
 
 let menuFocusIndex = 0;
 
+let stageFxTimeoutId = null;
 let lastFrameTime = performance.now();
 
 const wordPoolIndexes = {
@@ -418,6 +438,16 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setPixelRatio(
   Math.min(window.devicePixelRatio || 1, CONFIG.MAX_DEVICE_PIXEL_RATIO)
 );
+
+if (THREE.SRGBColorSpace) {
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+}
+
+if (THREE.ACESFilmicToneMapping) {
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = CONFIG.FX_TONE_MAPPING_EXPOSURE;
+}
+
 stage.appendChild(renderer.domElement);
 
 const boardGroup = new THREE.Group();
@@ -507,6 +537,41 @@ function scrollDisplayToEnd() {
   if (outputBox) {
     outputBox.scrollLeft = outputBox.scrollWidth;
   }
+}
+
+function flashStageFx(type) {
+  if (!CONFIG.FX_ENABLED || !stage) return;
+
+  clearTimeout(stageFxTimeoutId);
+
+  stage.classList.remove("is-signal-flash", "is-wrong-flash");
+
+  if (type === "wrong") {
+    stage.classList.add("is-wrong-flash");
+  } else {
+    const color =
+      type === "-"
+        ? "rgba(255, 177, 153, 0.22)"
+        : "rgba(138, 255, 154, 0.20)";
+
+    stage.style.setProperty("--signal-flash-color", color);
+    stage.classList.add("is-signal-flash");
+  }
+
+  stageFxTimeoutId = setTimeout(() => {
+    stage.classList.remove("is-signal-flash", "is-wrong-flash");
+  }, CONFIG.FX_SIGNAL_FLASH_MS);
+}
+
+function updateCameraFx(now) {
+  if (!CONFIG.FX_ENABLED || !CONFIG.FX_CAMERA_DRIFT_ENABLED) {
+    camera.position.x = 0;
+    camera.position.y = 0;
+    return;
+  }
+
+  camera.position.x = Math.sin(now * CONFIG.FX_CAMERA_DRIFT_SPEED) * CONFIG.FX_CAMERA_DRIFT_X;
+  camera.position.y = Math.cos(now * CONFIG.FX_CAMERA_DRIFT_SPEED * 0.73) * CONFIG.FX_CAMERA_DRIFT_Y;
 }
 
 /* =========================
@@ -895,12 +960,31 @@ function createTextSprite(text, size = 44, color = "#f3fbff") {
   canvas.height = 512;
 
   const ctx = canvas.getContext("2d");
+  const x = canvas.width / 2 - 2;
+  const y = canvas.height / 2 - 4;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = `650 ${size * 2}px system-ui, sans-serif`;
-  ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.62)";
+  ctx.shadowBlur = CONFIG.LABEL_SHADOW_BLUR;
+  ctx.shadowOffsetX = CONFIG.LABEL_SHADOW_OFFSET_X;
+  ctx.shadowOffsetY = CONFIG.LABEL_SHADOW_OFFSET_Y;
+  ctx.lineWidth = CONFIG.LABEL_STROKE_WIDTH;
+  ctx.strokeStyle = "rgba(5, 10, 16, 0.82)";
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = 0.32;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, x - 4, y - 5);
+  ctx.restore();
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -1126,6 +1210,22 @@ function createNode(seq, letter) {
   glow.position.z = 0.01;
   boardGroup.add(glow);
 
+  const shadow = new THREE.Mesh(
+    borderGeometry.clone(),
+    new THREE.MeshBasicMaterial({
+      color: 0x050910,
+      transparent: true,
+      opacity: CONFIG.NODE_SHADOW_OPACITY,
+      depthWrite: false
+    })
+  );
+  shadow.position.set(
+    pos.x + CONFIG.NODE_DEPTH_OFFSET_X,
+    pos.y + CONFIG.NODE_DEPTH_OFFSET_Y,
+    0.025
+  );
+  boardGroup.add(shadow);
+
   const border = new THREE.Mesh(
     borderGeometry,
     new THREE.MeshBasicMaterial({ color: lineColor })
@@ -1142,8 +1242,26 @@ function createNode(seq, letter) {
   mesh.position.z = 0.05;
   boardGroup.add(mesh);
 
+  const highlight = new THREE.Mesh(
+    mainGeometry.clone(),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: CONFIG.NODE_HIGHLIGHT_OPACITY,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  highlight.position.set(
+    pos.x + CONFIG.NODE_HIGHLIGHT_OFFSET_X,
+    pos.y + CONFIG.NODE_HIGHLIGHT_OFFSET_Y,
+    0.06
+  );
+  highlight.scale.set(0.82, 0.72, 1);
+  boardGroup.add(highlight);
+
   const label = createTextSprite(letter, CONFIG.NODE_LABEL_SIZE, "#f6fcff");
-  label.position.set(pos.x, pos.y, 0.09);
+  label.position.set(pos.x, pos.y, 0.105);
 
   if (isDot) {
     label.scale.set(CONFIG.DOT_LABEL_SCALE_X, CONFIG.DOT_LABEL_SCALE_Y, 1);
@@ -1540,6 +1658,7 @@ function finishLetter() {
 }
 
 function handleWrongSignal() {
+  flashStageFx("wrong");
   playSound("wrong");
 
   if (mode === "game") {
@@ -1584,6 +1703,7 @@ function triggerSignal(symbol) {
   nextSignalAllowedAt = now + getInputCooldownMs(symbol);
 
   flashInputButton();
+  flashStageFx(symbol);
   playSound(symbol === "-" ? "long" : "short");
 }
 
@@ -1694,6 +1814,7 @@ function animate(now = performance.now()) {
   updateRightMeter(now);
   updateGameOverIdle(now);
   updateGlowFade(deltaSeconds);
+  updateCameraFx(now);
 
   renderer.render(scene, camera);
 }
@@ -1822,7 +1943,7 @@ window.addEventListener("keydown", (e) => {
       return;
     }
   }
-  
+
   if (isVisible(roundEndBox)) {
     const key = e.key.toLowerCase();
 
