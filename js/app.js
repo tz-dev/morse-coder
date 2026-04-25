@@ -55,6 +55,7 @@ const CONFIG = {
     short: "snd/morse_short.wav",
     long: "snd/morse_long.wav",
     wrong: "snd/wrong.wav",
+    click: "snd/click.mp3",
     win: "snd/win.wav",
     lose: "snd/lose.wav",
     noise: "snd/noise.wav"
@@ -270,6 +271,7 @@ const sounds = {
   short: new Audio(CONFIG.SOUND_PATHS.short),
   long: new Audio(CONFIG.SOUND_PATHS.long),
   wrong: new Audio(CONFIG.SOUND_PATHS.wrong),
+  click: new Audio(CONFIG.SOUND_PATHS.click),
   win: new Audio(CONFIG.SOUND_PATHS.win),
   lose: new Audio(CONFIG.SOUND_PATHS.lose),
   noise: new Audio(CONFIG.SOUND_PATHS.noise)
@@ -332,6 +334,10 @@ function stopBackgroundNoise() {
   if (!noise) return;
 
   noise.pause();
+}
+
+function playClickSound() {
+  playSound("click");
 }
 
 function toggleBackgroundMusic() {
@@ -1515,7 +1521,9 @@ function resetAll() {
    ========================= */
 
 function resize() {
-  const rect = stage.getBoundingClientRect();
+  const canvas = renderer.domElement;
+  const rect = canvas.getBoundingClientRect();
+
   if (rect.width === 0 || rect.height === 0) return;
 
   renderer.setSize(rect.width, rect.height, false);
@@ -1585,24 +1593,45 @@ morseBtn.addEventListener("pointerdown", (e) => {
   }
 });
 
-resetBtn.addEventListener("click", resetAll);
-menuBtn.addEventListener("click", openMenu);
-helpBtn.addEventListener("click", openHelp);
+resetBtn.addEventListener("click", () => {
+  playClickSound();
+  resetAll();
+});
+
+menuBtn.addEventListener("click", () => {
+  playClickSound();
+  openMenu();
+});
+
+helpBtn.addEventListener("click", () => {
+  playClickSound();
+  openHelp();
+});
 
 if (hintToggleBtn) {
-  hintToggleBtn.addEventListener("click", toggleVisualHint);
+  hintToggleBtn.addEventListener("click", () => {
+    playClickSound();
+    toggleVisualHint();
+  });
 }
 
 if (musicToggleBtn) {
-  musicToggleBtn.addEventListener("click", toggleBackgroundMusic);
+  musicToggleBtn.addEventListener("click", () => {
+    playClickSound();
+    toggleBackgroundMusic();
+  });
 }
 
 if (closeHelpBtn) {
-  closeHelpBtn.addEventListener("click", closeHelp);
+  closeHelpBtn.addEventListener("click", () => {
+    playClickSound();
+    closeHelp();
+  });
 }
 
 if (againYesBtn) {
   againYesBtn.addEventListener("click", () => {
+    playClickSound();
     closeRoundEndBox();
     resetAll();
   });
@@ -1610,32 +1639,41 @@ if (againYesBtn) {
 
 if (againNoBtn) {
   againNoBtn.addEventListener("click", () => {
+    playClickSound();
     closeRoundEndBox();
     openMenu();
   });
 }
 
 trainingModeBtn.addEventListener("click", () => {
+  playClickSound();
   setPendingMode("training");
 });
 
 gameModeBtn.addEventListener("click", () => {
+  playClickSound();
   setPendingMode("game");
 });
 
 beginnerDifficultyBtn.addEventListener("click", () => {
+  playClickSound();
   setDifficulty("beginner");
 });
 
 intermediateDifficultyBtn.addEventListener("click", () => {
+  playClickSound();
   setDifficulty("intermediate");
 });
 
 expertDifficultyBtn.addEventListener("click", () => {
+  playClickSound();
   setDifficulty("expert");
 });
 
-startGameBtn.addEventListener("click", startSelectedMode);
+startGameBtn.addEventListener("click", () => {
+  playClickSound();
+  startSelectedMode();
+});
 
 window.addEventListener("keydown", (e) => {
   if (isVisible(roundEndBox)) {
