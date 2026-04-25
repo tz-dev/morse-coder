@@ -290,13 +290,15 @@ let roundEndSelection = "yes"; // "yes" | "no"
 let visualHintEnabled = true;
 let backgroundMusicEnabled = CONFIG.BACKGROUND_NOISE_ENABLED;
 
+let menuFocusIndex = 0;
+
+let lastFrameTime = performance.now();
+
 const wordPoolIndexes = {
   beginner: 0,
   intermediate: 0,
   expert: 0
 };
-
-let lastFrameTime = performance.now();
 
 /* =========================
    AUDIO
@@ -511,6 +513,42 @@ function scrollDisplayToEnd() {
    MENU HELPERS
    ========================= */
 
+function getMenuButtons() {
+  return [
+    trainingModeBtn,
+    gameModeBtn,
+    beginnerDifficultyBtn,
+    intermediateDifficultyBtn,
+    expertDifficultyBtn,
+    startGameBtn
+  ].filter(Boolean);
+}
+
+function updateMenuFocus() {
+  const buttons = getMenuButtons();
+
+  buttons.forEach((button, index) => {
+    button.classList.toggle("is-focused", index === menuFocusIndex);
+  });
+}
+
+function moveMenuFocus(direction) {
+  const buttons = getMenuButtons();
+  if (!buttons.length) return;
+
+  menuFocusIndex = (menuFocusIndex + direction + buttons.length) % buttons.length;
+  updateMenuFocus();
+}
+
+function activateMenuFocus() {
+  const buttons = getMenuButtons();
+  const button = buttons[menuFocusIndex];
+
+  if (button) {
+    button.click();
+  }
+}
+
 function setPendingMode(nextMode) {
   if (nextMode !== "training" && nextMode !== "game") return;
 
@@ -555,6 +593,8 @@ function updateMenuSelection() {
   if (expertDifficultyBtn) {
     expertDifficultyBtn.classList.toggle("is-active", difficulty === "expert");
   }
+
+  updateMenuFocus();
 }
 
 function startSelectedMode() {
@@ -585,6 +625,7 @@ function openMenu() {
   }
 
   updateMenuSelection();
+  updateMenuFocus();
   updateHeader();
   updateOverlayBlur();
 }
@@ -1758,6 +1799,27 @@ startGameBtn.addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (e) => {
+
+  if (isVisible(greetingBox)) {
+    if (e.code === "ArrowLeft" || e.code === "ArrowUp") {
+      e.preventDefault();
+      moveMenuFocus(-1);
+      return;
+    }
+
+    if (e.code === "ArrowRight" || e.code === "ArrowDown") {
+      e.preventDefault();
+      moveMenuFocus(1);
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      activateMenuFocus();
+      return;
+    }
+  }
+  
   if (isVisible(roundEndBox)) {
     const key = e.key.toLowerCase();
 
