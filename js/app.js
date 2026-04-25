@@ -674,10 +674,13 @@ function openRoundEndBox(success) {
   }
 
   roundEndTitle.textContent = success ? "Success" : "Game Over";
-  roundEndText.textContent = "Again?";
 
-  roundEndSelection = "yes";
-  updateRoundEndSelection();
+  if (success && roundStarted) {
+    const seconds = ((performance.now() - roundStartAt) / 1000).toFixed(1);
+    roundEndText.textContent = `Time: ${seconds}s · Again?`;
+  } else {
+    roundEndText.textContent = "Again?";
+  }
 
   roundEndBox.classList.remove("is-hidden");
   updateOverlayBlur();
