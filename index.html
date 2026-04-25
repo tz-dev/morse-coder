@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morse Coder</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section id="greetingBox" class="greeting-box">
+        <h1>Morse Coder</h1>
+        <p>Choose mode and difficulty.</p>
+
+        <div class="menu-section">
+          <div class="menu-section-title">Mode</div>
+          <div class="mode-buttons">
+            <button id="trainingModeBtn" class="control-btn option-btn is-active" type="button">
+              Training
+            </button>
+            <button id="gameModeBtn" class="control-btn option-btn" type="button">
+              Game
+            </button>
+          </div>
+        </div>
+
+        <div class="menu-section">
+          <div class="menu-section-title">Difficulty</div>
+          <div class="difficulty-buttons">
+            <button id="beginnerDifficultyBtn" class="control-btn option-btn" type="button">
+              Beginner<br />
+              <small>long pause · relaxed input</small>
+            </button>
+            <button id="intermediateDifficultyBtn" class="control-btn option-btn is-active" type="button">
+              Intermediate<br />
+              <small>medium pause · balanced input</small>
+            </button>
+            <button id="expertDifficultyBtn" class="control-btn option-btn" type="button">
+              Expert<br />
+              <small>short pause · fast input</small>
+            </button>
+          </div>
+        </div>
+
+        <button id="startGameBtn" class="control-btn start-btn" type="button">
+          Start
+        </button>
+      </section>
+
+      <section id="roundEndBox" class="greeting-box round-end-box is-hidden">
+        <h1 id="roundEndTitle">Game Over</h1>
+        <p id="roundEndText">Again?</p>
+
+        <div class="mode-buttons">
+          <button id="againYesBtn" class="control-btn" type="button">Yes</button>
+          <button id="againNoBtn" class="control-btn" type="button">No</button>
+        </div>
+      </section>
+
+      <section id="helpBox" class="greeting-box help-box is-hidden">
+        <h1>Help</h1>
+
+        <p>
+          Enter Morse code with the main button, mouse, or keyboard.
+        </p>
+
+        <p>
+          <strong>Short / dot:</strong> left click, Space, comma, period, or Arrow Left.
+          <br />
+          <strong>Long / dash:</strong> right click, Enter, hyphen, underscore, or Arrow Right.
+        </p>
+
+        <p>
+          The left bar shows the pause window. In Game Mode it turns red after a completed
+          letter and counts down to Game Over.
+        </p>
+
+        <p>
+          The right bar shows input feedback in Training Mode. In Game Mode it shows your
+          progress through the target word.
+        </p>
+
+        <p>
+          Difficulty changes the letter pause, auto-finish timing, game-over timeout,
+          and input delay for short and long signals.
+        </p>
+
+        <p>
+          In Game Mode, type the target word correctly. A wrong signal or too long a pause
+          ends the round.
+        </p>
+
+        <div class="mode-buttons single">
+          <button id="closeHelpBtn" class="control-btn" type="button">Close</button>
+        </div>
+      </section>
+
+      <section id="display" aria-live="polite">
+        <div class="display-top">
+          <button id="menuBtn" class="menu-btn" type="button">Menu</button>
+
+          <div class="display-title-wrap">
+            <div id="headlineText" class="display-headline">MORSE CODER</div>
+            <div id="subHeadlineText" class="display-subheadline">Choose a mode</div>
+          </div>
+
+          <button id="helpBtn" class="menu-btn help-btn" type="button">Help</button>
+        </div>
+
+        <div class="display-grid">
+          <div class="display-card">
+            <div class="card-label">Sequence</div>
+            <div class="card-value">
+              <span id="inputText"></span><span id="liveInput"></span>
+            </div>
+          </div>
+
+          <div class="display-card">
+            <div class="card-label">Output</div>
+            <div class="card-value">
+              <span id="outputText"></span><span id="liveOutput"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="stage" aria-label="Morse code tree">
+        <div class="side-meter side-meter-left" aria-hidden="true">
+          <div id="pauseLabel" class="meter-caption">PAUSE</div>
+          <div class="meter-track">
+            <div id="pauseFill" class="meter-fill pause-fill"></div>
+          </div>
+        </div>
+
+        <div class="side-meter side-meter-right" aria-hidden="true">
+          <div id="pressTypeLabel" class="meter-caption">SHORT</div>
+          <div class="meter-track">
+            <div id="pressFill" class="meter-fill press-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <button id="morseBtn" class="control-btn" type="button">
+          Press
+        </button>
+
+        <div id="roundTimer" class="round-timer is-idle" aria-live="polite">
+          0.0s
+        </div>
+
+        <button id="resetBtn" class="control-btn" type="button">
+          Reset
+        </button>
+
+        <button id="hintToggleBtn" class="hint-toggle-btn" type="button" aria-pressed="true">
+          Hint On
+        </button>
+
+        <button id="musicToggleBtn" class="music-toggle-btn" type="button" aria-pressed="true">
+          Music On
+        </button>
+
+        <p class="hint">
+          <a href="https://github.com/tz-dev/morse-coder" target="_new">Github/tz-dev/morse-coder</a>
+        </p>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
