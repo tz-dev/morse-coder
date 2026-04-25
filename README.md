@@ -3,7 +3,7 @@
 Morse Coder is a browser-based Morse code trainer and game.  
 It visualizes the Morse tree with Three.js, gives live input feedback, supports difficulty modes, audio cues, hints, and a simple target-word game mode.
 
-## Live Verion
+## Live Version
 
 [Check the live version right here!](https://tz-dev.github.io/morse-coder/)
 
