@@ -41,12 +41,6 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Escape: open / close menu
 - 1 / 2 / 3: switch difficulty
 
-### Other
-
-- Escape: open / close menu or overlay
-- Backspace: delete current input
-- 1 / 2 / 3: switch difficulty
-
 ## File Structure
 
 ```text
