@@ -406,6 +406,15 @@ body {
   margin-top: 22px;
 }
 
+.option-btn.is-focused,
+.start-btn.is-focused {
+  outline: 3px solid rgba(67, 216, 255, 0.85);
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 2px rgba(67, 216, 255, 0.18),
+    0 0 18px rgba(67, 216, 255, 0.22);
+}
+
 .pause-fill.is-danger {
   background: linear-gradient(to top, #ff3d3d, #ff9a7a);
   box-shadow: 0 0 12px rgba(255, 70, 70, 0.65);
