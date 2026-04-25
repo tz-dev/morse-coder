@@ -18,9 +18,10 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Pause meter for letter separation and game-over countdown
 - Progress meter in game mode
 - Background noise toggle
-- Audio cues for dots, dashes, wrong input, clicks, win, and lose states
+- Audio cues for held input, wrong input, clicks, win, and lose states
 - Keyboard, mouse, and menu navigation support
 - New Word button in Game Mode
+- CRT/radio-style visual effects and 3D-flavoured Morse nodes
 
 ## Screenshots
 
@@ -34,13 +35,14 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 
 | Action | Mouse | Keyboard |
 |---|---|---|
-| Dot / short | Left click | Space |
-| Dash / long | Right click | Enter |
+| Dot / short | Short left click / tap | Short Space press |
+| Dash / long | Hold left click / tap | Hold Space |
+
+The Morse tone starts on press and stops on release.  
+The press duration decides whether the input becomes a dot or a dash.
 
 ### Extra shortcuts
 
-- Dot / short: `.`, `,`, Arrow Left
-- Dash / long: `-`, `_`, Arrow Right
 - Backspace: delete current input
 - Escape: open / close menu or overlay
 - 1 / 2 / 3: switch difficulty
@@ -75,7 +77,7 @@ Just download the repository and open `index.html`.
 
 ## Configuration
 
-Most gameplay and visual settings are adjustable at the top of `js/app.js`.
+Most gameplay, input, audio, and visual settings are adjustable at the top of `js/app.js`.
 
 Important sections:
 
@@ -87,6 +89,7 @@ TREE_WIDTH
 TREE_ROOT_Y
 TREE_STEP_Y
 NODE_LABEL_SIZE
+FX_ENABLED
 ```
 
 Each difficulty can define:
@@ -97,6 +100,7 @@ autoFinishDelayMs
 gameOverPauseUnits
 shortInputCooldownMs
 longInputCooldownMs
+pressDashThresholdMs
 wordPool
 ```
 
