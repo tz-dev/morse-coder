@@ -172,7 +172,13 @@ const CONFIG = {
   TITLE_RIGHT_X: 4.85,
 
   // Letters inside symbols
-  NODE_LABEL_SIZE: 132,
+  NODE_LABEL_SIZE: 120,
+  LABEL_OFFSET_X: -0.03,
+  LABEL_OFFSET_Y: 0.03,
+  LABEL_SHADOW_BLUR: 8,
+  LABEL_SHADOW_OFFSET_X: 6,
+  LABEL_SHADOW_OFFSET_Y: 7,
+  LABEL_STROKE_WIDTH: 7,
   DOT_LABEL_SCALE_X: 1.95,
   DOT_LABEL_SCALE_Y: 0.98,
   DASH_LABEL_SCALE_X: 2.05,
@@ -747,7 +753,9 @@ function openRoundEndBox(success) {
     roundEndText.textContent = "Again?";
   }
 
+  roundEndSelection = "yes";
   roundEndBox.classList.remove("is-hidden");
+  updateRoundEndSelection();
   updateOverlayBlur();
 }
 
@@ -961,7 +969,7 @@ function createTextSprite(text, size = 44, color = "#f3fbff") {
 
   const ctx = canvas.getContext("2d");
   const x = canvas.width / 2 - 2;
-  const y = canvas.height / 2 - 4;
+  const y = canvas.height / 2 - 2;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = `650 ${size * 2}px system-ui, sans-serif`;
@@ -1261,7 +1269,11 @@ function createNode(seq, letter) {
   boardGroup.add(highlight);
 
   const label = createTextSprite(letter, CONFIG.NODE_LABEL_SIZE, "#f6fcff");
-  label.position.set(pos.x, pos.y, 0.105);
+  label.position.set(
+    pos.x + CONFIG.LABEL_OFFSET_X,
+    pos.y + CONFIG.LABEL_OFFSET_Y,
+    0.105
+  );
 
   if (isDot) {
     label.scale.set(CONFIG.DOT_LABEL_SCALE_X, CONFIG.DOT_LABEL_SCALE_Y, 1);
@@ -1336,10 +1348,31 @@ function buildTree() {
    DISPLAY
    ========================= */
 
+function shouldShowTrailingSequenceJoiner() {
+  if (!inputHistory.length) return false;
+  if (currentSequence) return false;
+  if (roundFinished) return false;
+
+  if (mode === "training") {
+    return true;
+  }
+
+  if (mode === "game") {
+    return outputHistory.length < targetWord.length;
+  }
+
+  return false;
+}
+
 function updateDisplay() {
-  inputText.textContent = inputHistory.length
+  const sequenceText = inputHistory.length
     ? inputHistory.join(CONFIG.INPUT_JOINER)
     : CONFIG.EMPTY_PLACEHOLDER;
+
+  inputText.textContent =
+    inputHistory.length && shouldShowTrailingSequenceJoiner()
+      ? `${sequenceText}${CONFIG.INPUT_JOINER}`
+      : sequenceText;
 
   outputText.textContent = outputHistory.length
     ? outputHistory.join("")
