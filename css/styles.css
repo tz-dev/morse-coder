@@ -419,6 +419,13 @@ body {
   color: #b5c9d6;
 }
 
+.round-end-box .control-btn.is-active {
+  opacity: 1;
+  background: #29435a;
+  border-color: #8aff9a;
+  box-shadow: 0 0 0 2px rgba(138, 255, 154, 0.16), 0 0 18px rgba(138, 255, 154, 0.18);
+}
+
 .help-btn {
   justify-self: end;
 }
