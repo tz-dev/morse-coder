@@ -3,6 +3,10 @@
 Morse Coder is a browser-based Morse code trainer and game.  
 It visualizes the Morse tree with Three.js, gives live input feedback, supports difficulty modes, audio cues, hints, and a simple target-word game mode.
 
+## Live Verion
+
+[Check the live version right here!](https://tz-dev.github.io/morse-coder/)
+
 ## Features
 
 - Training mode for free Morse practice
@@ -12,7 +16,6 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Optional next-letter hint
 - Pause meter for letter separation
 - Progress meter in game mode
-- Sound effects for dot, dash, wrong input, win, lose, and background noise
 - Keyboard and mouse input support
 
 ## Screenshot
@@ -57,43 +60,14 @@ morse-code/
    ├─ morse_short.wav
    ├─ morse_long.wav
    ├─ wrong.wav
-   ├─ win.mp3
-   ├─ lose.mp3
+   ├─ win.wav
+   ├─ lose.wav
    └─ noise.wav
 ````
 
 ## Setup
 
-Clone or download the project and open it through a local server.
-
-Example with Python:
-
-```bash
-python -m http.server 8000
-```
-
-Then open:
-
-```text
-http://localhost:8000
-```
-
-A local server is recommended because browsers may restrict audio or module loading from direct `file://` paths.
-
-## Audio Files
-
-Place these files in the `snd/` folder:
-
-```text
-morse_short.wav
-morse_long.wav
-wrong.wav
-win.mp3
-lose.mp3
-noise.wav
-```
-
-Background noise can be toggled in the interface.
+Just download the repository and open index.html.
 
 ## Configuration
 
@@ -120,19 +94,6 @@ gameOverPauseUnits
 shortInputCooldownMs
 longInputCooldownMs
 wordPool
-```
-
-## GitHub Upload
-
-From the project folder:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/morse-coder.git
-git push -u origin main
 ```
 
 ## License
