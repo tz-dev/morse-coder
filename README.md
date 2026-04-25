@@ -1,7 +1,7 @@
 # Morse Coder
 
 Morse Coder is a browser-based Morse code trainer and game.  
-It visualizes the Morse tree with Three.js, gives live input feedback, supports difficulty modes, audio cues, optional hints, and a target-word game mode.
+It visualizes the Morse tree with Three.js, gives live input feedback, supports difficulty modes, audio cues, optional hints, menu navigation, and a simple target-word game mode.
 
 ## Live Version
 
@@ -12,13 +12,15 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Training mode for free Morse practice
 - Game mode with rotating target words
 - Beginner, Intermediate, and Expert difficulty presets
+- Difficulty-specific word pools
 - Visual Morse tree with live path highlighting
 - Optional next-letter hint
 - Pause meter for letter separation and game-over countdown
 - Progress meter in game mode
-- Keyboard and mouse input support
-- Background noise toggle and sound effects
-- Game-over dialog with quick replay
+- Background noise toggle
+- Audio cues for dots, dashes, wrong input, clicks, win, and lose states
+- Keyboard, mouse, and menu navigation support
+- New Word button in Game Mode
 
 ## Screenshots
 
@@ -42,7 +44,8 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Backspace: delete current input
 - Escape: open / close menu or overlay
 - 1 / 2 / 3: switch difficulty
-- Game Over: Arrow Left / Arrow Right to choose, Enter to confirm
+- Y / N: answer the Game Over / Again prompt
+- Arrow keys + Enter: navigate and confirm menu / prompt selections
 
 ## File Structure
 
@@ -68,19 +71,11 @@ morse-coder/
 
 ## Setup
 
-Download the repository and open `index.html` in a browser.
-
-For local development, using a small local server is recommended:
-
-```bash
-python3 -m http.server
-```
-
-Then open the shown local URL in your browser.
+Just download the repository and open `index.html`.
 
 ## Configuration
 
-Most gameplay, audio, and visual settings are adjustable at the top of `js/app.js`.
+Most gameplay and visual settings are adjustable at the top of `js/app.js`.
 
 Important sections:
 
