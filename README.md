@@ -18,9 +18,11 @@ It visualizes the Morse tree with Three.js, gives live input feedback, supports 
 - Progress meter in game mode
 - Keyboard and mouse input support
 
-## Screenshot
+## Screenshots
 
-![Morse Coder screenshot](img/screenshot.png)
+![Morse Coder screenshot](img/screenshot00.png)  
+
+![Morse Coder screenshot](img/screenshot01.png)  
 
 ## Controls
 
@@ -53,7 +55,8 @@ morse-code/
 ├─ css/
 │  └─ styles.css
 ├─ img/
-│  └─ screenshot.png
+   ├─ screenshot00.png
+│  └─ screenshot01.png
 ├─ js/
 │  └─ app.js
 └─ snd/
